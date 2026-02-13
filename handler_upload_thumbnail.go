@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"mime"
@@ -63,7 +65,11 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 		respondWithError(w, http.StatusUnauthorized, "not the owner of the video", err)
 	}
 
-	assetPath := getAssetPath(videoID, mediaType)
+	key := make([]byte, 32)
+	rand.Read(key)
+	urlKey := base64.RawURLEncoding.EncodeToString(key)
+
+	assetPath := getAssetPath(urlKey, mediaType)
 
 	fileDst, err := os.Create(cfg.getAssetDiskPath(assetPath))
 	if err != nil {

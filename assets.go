@@ -5,8 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 func (cfg apiConfig) ensureAssetsDir() error {
@@ -24,9 +22,9 @@ func mediaTypeToExt(mediaType string) string {
 	return "." + mediaParts[1]
 }
 
-func getAssetPath(videoId uuid.UUID, mediaType string) string {
+func getAssetPath(urlKey string, mediaType string) string {
 	ext := mediaTypeToExt(mediaType)
-	return fmt.Sprintf("%s%s", videoId, ext)
+	return fmt.Sprintf("%s%s", urlKey, ext)
 }
 
 func (cfg apiConfig) getAssetDiskPath(assetPath string) string {
