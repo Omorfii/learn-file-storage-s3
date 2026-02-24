@@ -81,7 +81,7 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 
 	_, err = io.Copy(fileDst, fileData)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "couldnt write data to the video file", err)
+		respondWithError(w, http.StatusInternalServerError, "couldnt write data to the thumbnail file", err)
 		return
 	}
 
