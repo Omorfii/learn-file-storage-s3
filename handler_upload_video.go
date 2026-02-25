@@ -15,7 +15,7 @@ import (
 
 func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request) {
 
-	http.MaxBytesReader(w, r.Body, 1<<30)
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<30)
 
 	videoIDString := r.PathValue("videoID")
 	videoID, err := uuid.Parse(videoIDString)
@@ -82,9 +82,15 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	ratio, err := getVideoAspectRatio(tempFile.Name())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "couldnt retrieve aspect ratio", err)
+		return
+	}
+
 	key := make([]byte, 32)
 	rand.Read(key)
-	urlKey := base64.RawURLEncoding.EncodeToString(key)
+	urlKey := ratio + "/" + base64.RawURLEncoding.EncodeToString(key)
 
 	assetPath := getAssetPath(urlKey, mediaType)
 
