@@ -119,14 +119,9 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "couldn't create aws object", err)
 	}
 
-	url := cfg.s3Bucket + "," + assetPath
+	url := "https://" + cfg.s3CfDistribution + "/" + assetPath
 	videoDb.VideoURL = &url
 	cfg.db.UpdateVideo(videoDb)
-	videoDb, err = cfg.dbVideoToSignedVideo(videoDb)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "couldnt create signed video", err)
-		return
-	}
 
 	respondWithJSON(w, http.StatusOK, videoDb)
 }
