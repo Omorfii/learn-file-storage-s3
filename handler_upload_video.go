@@ -88,6 +88,19 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	fastStartVideo, err := processVideoForFastStart(tempFile.Name())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "error creating faststart video", err)
+		return
+	}
+
+	fastStartFile, err := os.Open(fastStartVideo)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "error opening the file to the faststart", err)
+		return
+	}
+	defer fastStartFile.Close()
+
 	key := make([]byte, 32)
 	rand.Read(key)
 	urlKey := ratio + "/" + base64.RawURLEncoding.EncodeToString(key)
@@ -97,7 +110,7 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 	parameter := s3.PutObjectInput{
 		Bucket:      &cfg.s3Bucket,
 		Key:         &assetPath,
-		Body:        tempFile,
+		Body:        fastStartFile,
 		ContentType: &mediaType,
 	}
 
@@ -106,9 +119,14 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "couldn't create aws object", err)
 	}
 
-	url := cfg.getObjectUrl(assetPath)
+	url := cfg.s3Bucket + "," + assetPath
 	videoDb.VideoURL = &url
 	cfg.db.UpdateVideo(videoDb)
+	videoDb, err = cfg.dbVideoToSignedVideo(videoDb)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "couldnt create signed video", err)
+		return
+	}
 
 	respondWithJSON(w, http.StatusOK, videoDb)
 }
